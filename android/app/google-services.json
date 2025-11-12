@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "876515520923",
+    "project_id": "shitzu-58831",
+    "storage_bucket": "shitzu-58831.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876515520923:android:fb0bb2a85f6a8eb526713e",
+        "android_client_info": {
+          "package_name": "Shit.apli"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3Oautm2Rq_rO8mGK7ipVYQ4S5WvzpNkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876515520923:android:66712ffd0b3d5ed926713e",
+        "android_client_info": {
+          "package_name": "com.example.shitzu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3Oautm2Rq_rO8mGK7ipVYQ4S5WvzpNkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
