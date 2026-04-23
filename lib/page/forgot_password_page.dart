@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shitzu/page/api_config.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -33,17 +32,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      String apiUrl;
-      if (kIsWeb) {
-        apiUrl =
-            'http://localhost:3000/api/forgot-password'; // Para Flutter Web
-      } else if (Platform.isAndroid) {
-        apiUrl =
-            'http://10.0.2.2:3000/api/forgot-password'; // Para emulador Android
-      } else {
-        apiUrl =
-            'http://localhost:3000/api/forgot-password'; // Para iOS/Windows/Linux
-      }
+      final String apiUrl = '${ApiConfig.baseUrl}/api/forgot-password';
 
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -63,19 +52,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         );
         Navigator.of(context).pop();
       } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error al solicitar restablecimiento: ${response.body}',
+              'Error al solicitar restablecimiento: ${errorData['error'] ?? 'Error desconocido'}',
             ),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } on SocketException catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se pudo conectar con el servidor: $e')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ocurrió un error inesperado.')),
       );
     } finally {
       if (mounted) {

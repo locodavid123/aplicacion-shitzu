@@ -3,8 +3,9 @@ import 'package:shitzu/page/login_page.dart';
 
 class HomePage extends StatelessWidget {
   final String email;
+  final String role;
 
-  const HomePage({super.key, required this.email});
+  const HomePage({super.key, required this.email, required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +39,11 @@ class HomePage extends StatelessWidget {
                 fontSize: 18,
                 color: Theme.of(context).textTheme.bodySmall?.color,
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Categoría: $role',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),

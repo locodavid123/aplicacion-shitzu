@@ -1,11 +1,11 @@
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shitzu/page/forgot_password_page.dart';
 import 'package:shitzu/page/register_page.dart';
 import 'package:shitzu/page/home_page.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shitzu/page/api_config.dart';
 import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
@@ -20,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -38,14 +39,8 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // TIP: Si usas un celular físico, cambia 'localhost' por la IP de tu PC (ej. 192.168.1.X)
-      final String baseUrl = kIsWeb
-          ? 'http://localhost:3000'
-          : (Platform.isAndroid
-                ? 'http://10.0.2.2:3000'
-                : 'http://localhost:3000');
-
-      final String apiUrl = '$baseUrl/api/login';
+      final String apiUrl = '${ApiConfig.baseUrl}/api/login';
+      debugPrint('🌐 Conectando a: $apiUrl');
 
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -59,6 +54,12 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        // Acceso más seguro a los datos anidados
+        final String userRole = (responseData['user'] != null)
+            ? responseData['user']['role'] ?? 'cliente'
+            : 'cliente';
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('¡Inicio de sesión exitoso!')),
         );
@@ -66,7 +67,8 @@ class _LoginPageState extends State<LoginPage> {
         // Navegar a HomePage tras el éxito
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => HomePage(email: _emailController.text.trim()),
+            builder: (context) =>
+                HomePage(email: _emailController.text.trim(), role: userRole),
           ),
         );
       } else {
@@ -80,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
-    } on SocketException catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -152,12 +154,24 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 20),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
                             filled: true,
                             labelText: 'Contraseña',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.lock),
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {

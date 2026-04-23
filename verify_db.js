@@ -7,23 +7,28 @@ const verify = async () => {
     await connectDB();
     
     try {
-        console.log('Intentando inicializar la colección de usuarios...');
+        console.log('🔍 Verificando conexión e intentando crear un usuario de prueba...');
         
         const testUser = new User({
             email: "verificacion@shitzu.com",
-            password: "password_de_prueba_123"
+            password: "password_de_prueba_123",
+            fullName: "Usuario de Verificación",
+            username: "verify_user",
+            age: 25,
+            role: "cliente" // Por defecto es cliente, pero aquí lo confirmamos
         });
 
         await testUser.save();
-        console.log('✨ Usuario de prueba creado con éxito. ¡La colección de usuarios ya está operativa!');
+        console.log('✨ Usuario de prueba creado con éxito. Rol asignado:', testUser.role);
     } catch (error) {
         if (error.code === 11000) {
-            console.log('ℹ️ La colección ya existe y el usuario de prueba también. Todo está en orden.');
+            console.log('ℹ️ El usuario de prueba ya existe en la base de datos. La conexión es correcta.');
         } else {
             console.error('❌ Error al verificar/crear la colección:', error.message);
         }
     } finally {
-        mongoose.connection.close();
+        await mongoose.disconnect();
+        console.log('🔌 Conexión cerrada.');
     }
 };
 

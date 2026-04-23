@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        // Si usas MongoDB Atlas, cambia esta URL por tu cadena de conexión
-        // Hemos quitado los símbolos < > y añadido 'shitzu_db' como nombre de la base de datos
-        const url = 'mongodb+srv://produccion364_db_user:M1s3i4TCUPJVqLu0@beban32.ssf4cq2.mongodb.net/shitzu_db?retryWrites=true&w=majority&appName=beban32';
+        // Se recomienda usar variables de entorno para la URL de conexión
+        const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/shitzu_db';
+        
+        if (!process.env.MONGODB_URI) {
+            console.warn('⚠️ Advertencia: MONGODB_URI no está definida en .env, usando base de datos local.');
+        }
+
         await mongoose.connect(url);
         console.log('✅ MongoDB conectado exitosamente');
     } catch (error) {

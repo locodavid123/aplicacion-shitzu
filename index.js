@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db');
 const Pet = require('./Pet');
 const User = require('./User');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 
@@ -21,15 +23,20 @@ connectDB().then(() => {
 app.post('/api/users', async (req, res) => {
     console.log('📩 Intentando guardar usuario:', req.body);
     try {
-        const { email, password } = req.body;
-        if (!email || !password) throw new Error('Faltan datos obligatorios (email/password)');
+        const { email, password, fullName, username, country, city, phone, age } = req.body;
+        if (!email || !password || !fullName || !username || age === undefined) throw new Error('Faltan datos obligatorios');
         
-        const newUser = new User({ email, password });
+        const newUser = new User({ email, password, fullName, username, country, city, phone, age });
         await newUser.save();
         res.status(201).json({ message: 'Usuario guardado en MongoDB', user: newUser });
     } catch (error) {
-        console.error('❌ Error al guardar:', error.message);
-        res.status(400).json({ error: error.message });
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            res.status(400).json({ error: `El ${field} ya está registrado.` });
+        } else {
+            console.error('❌ Error al guardar:', error.message);
+            res.status(400).json({ error: error.message });
+        }
     }
 });
 
@@ -43,12 +50,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
 
-        // Nota: En producción, usa bcrypt.compare
-        if (user.password !== password) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
 
-        res.status(200).json({ message: 'Login exitoso', user: { email: user.email } });
+        res.status(200).json({ message: 'Login exitoso', user: { email: user.email, role: user.role } });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

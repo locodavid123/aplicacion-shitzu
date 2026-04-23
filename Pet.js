@@ -11,9 +11,10 @@ const PetSchema = new mongoose.Schema({
         type: String,
         default: 'Shih Tzu'
     },
-    ownerEmail: {
-        type: String,
-        required: true // Para vincularlo con el usuario de Firebase
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     createdAt: {
         type: Date,
