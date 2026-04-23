@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -34,29 +37,47 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final String baseUrl = kIsWeb
+          ? 'http://localhost:3000'
+          : (Platform.isAndroid
+                ? 'http://10.0.2.2:3000'
+                : 'http://localhost:3000');
+
+      final String apiUrl = '$baseUrl/api/users';
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+        }),
       );
+
       if (!mounted) return;
-      Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      String message;
-      if (e.code == 'weak-password') {
-        message = 'La contraseña es demasiado débil.';
-      } else if (e.code == 'email-already-in-use') {
-        message = 'Ya existe una cuenta con ese correo electrónico.';
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Usuario registrado y sincronizado con éxito!'),
+          ),
+        );
+        Navigator.of(context).pop();
       } else {
-        message = 'Ocurrió un error al registrarse.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error al registrarse: ${jsonDecode(response.body)['error'] ?? response.body}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // No navegar si la sincronización con el servidor falla
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } catch (e) {
+    } on SocketException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ocurrió un error inesperado.')),
+        SnackBar(content: Text('No se pudo conectar con el servidor: $e')),
       );
     } finally {
       if (mounted) {
@@ -71,10 +92,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Registro',
-          style: GoogleFonts.lobster(fontSize: 32, color: Colors.white),
-        ),
+        title: Text('Registro', style: GoogleFonts.lobster(fontSize: 32)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -93,7 +111,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     filled: true,
-                    fillColor: Colors.white,
                     labelText: 'Correo Electrónico',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
@@ -102,7 +119,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Por favor, ingresa un correo.';
                     }
-                    // Puedes añadir una validación de formato de email más estricta si quieres.
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value.trim())) {
+                      return 'Por favor, ingresa un correo válido.';
+                    }
                     return null;
                   },
                 ),
@@ -112,7 +133,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     filled: true,
-                    fillColor: Colors.white,
                     labelText: 'Contraseña',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
@@ -133,7 +153,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     filled: true,
-                    fillColor: Colors.white,
                     labelText: 'Confirmar Contraseña',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock_outline),

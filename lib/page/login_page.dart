@@ -1,8 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shitzu/page/forgot_password_page.dart';
 import 'package:shitzu/page/register_page.dart';
+import 'package:shitzu/page/home_page.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,25 +38,56 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      // TIP: Si usas un celular físico, cambia 'localhost' por la IP de tu PC (ej. 192.168.1.X)
+      final String baseUrl = kIsWeb
+          ? 'http://localhost:3000'
+          : (Platform.isAndroid
+                ? 'http://10.0.2.2:3000'
+                : 'http://localhost:3000');
+
+      final String apiUrl = '$baseUrl/api/login';
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+        }),
       );
-      // El AuthGate se encargará de la navegación, no es necesario hacer nada aquí.
-      // No es necesario llamar a setState aquí porque AuthGate reconstruirá el árbol de widgets.
-    } on FirebaseAuthException catch (e) {
+
       if (!mounted) return;
-      String message;
-      if (e.code == 'user-not-found') {
-        message = 'No se encontró un usuario con ese correo.';
-      } else if (e.code == 'wrong-password') {
-        message = 'La contraseña es incorrecta.';
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Inicio de sesión exitoso!')),
+        );
+
+        // Navegar a HomePage tras el éxito
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => HomePage(email: _emailController.text.trim()),
+          ),
+        );
       } else {
-        message = 'Ocurrió un error al iniciar sesión.';
+        // Error en el servidor (ej. credenciales incorrectas)
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        final String errorMessage = errorData['error'] ?? 'Error desconocido';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar sesión: $errorMessage'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+    } on SocketException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo conectar con el servidor: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,10 +106,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'shitzu App',
-          style: GoogleFonts.lobster(fontSize: 32, color: Colors.white),
-        ),
+        title: Text('shitzu App', style: GoogleFonts.lobster(fontSize: 32)),
         centerTitle: true,
       ),
       body: Builder(
@@ -101,7 +133,6 @@ class _LoginPageState extends State<LoginPage> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: const InputDecoration(
                             filled: true,
-                            fillColor: Colors.white,
                             labelText: 'Correo Electrónico',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.email),
@@ -109,6 +140,11 @@ class _LoginPageState extends State<LoginPage> {
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Por favor, ingresa tu correo.';
+                            }
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(value.trim())) {
+                              return 'Por favor, ingresa un correo válido.';
                             }
                             return null;
                           },
@@ -119,7 +155,6 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: true,
                           decoration: const InputDecoration(
                             filled: true,
-                            fillColor: Colors.white,
                             labelText: 'Contraseña',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.lock),
@@ -158,10 +193,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   );
                                 },
-                          child: const Text(
-                            '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: Colors.white70),
-                          ),
+                          child: const Text('¿Olvidaste tu contraseña?'),
                         ),
                         TextButton(
                           onPressed: _isLoading
@@ -177,7 +209,6 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                           child: const Text(
                             '¿No tienes una cuenta? Regístrate',
-                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ],

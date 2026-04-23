@@ -1,11 +1,12 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shitzu/page/auth_gate.dart';
-import 'package:shitzu/firebase_options.dart';
 
+// Esta es la ÚNICA función main que debe existir.
 void main() async {
+  // Asegura que los bindings de Flutter estén inicializados antes de cualquier otra cosa.
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Ejecuta la aplicación.
   runApp(const MyApp());
 }
 
@@ -19,8 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'Mi Shitzu App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 193, 77, 214),
-          brightness: Brightness.dark, // Para mantener el fondo oscuro
+          seedColor: const Color.fromARGB(255, 203, 65, 227),
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),

@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -30,24 +33,50 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        // Usamos trim() para eliminar espacios en blanco accidentales
-        email: _emailController.text.trim(),
+      String apiUrl;
+      if (kIsWeb) {
+        apiUrl =
+            'http://localhost:3000/api/forgot-password'; // Para Flutter Web
+      } else if (Platform.isAndroid) {
+        apiUrl =
+            'http://10.0.2.2:3000/api/forgot-password'; // Para emulador Android
+      } else {
+        apiUrl =
+            'http://localhost:3000/api/forgot-password'; // Para iOS/Windows/Linux
+      }
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': _emailController.text.trim()}),
       );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Si el correo existe, se ha enviado un enlace para restablecer la contraseña.',
+            ),
+          ),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error al solicitar restablecimiento: ${response.body}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } on SocketException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Se ha enviado un enlace para restablecer la contraseña a tu correo.',
-          ),
-        ),
+        SnackBar(content: Text('No se pudo conectar con el servidor: $e')),
       );
-      Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } finally {
       if (mounted) {
         setState(() {
@@ -63,7 +92,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       appBar: AppBar(
         title: Text(
           'Recuperar Contraseña',
-          style: GoogleFonts.lobster(fontSize: 32, color: Colors.white),
+          style: GoogleFonts.lobster(fontSize: 32),
         ),
         centerTitle: true,
       ),
@@ -80,7 +109,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const Text(
                   'Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
@@ -88,7 +117,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     filled: true,
-                    fillColor: Colors.white,
                     labelText: 'Correo Electrónico',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
@@ -96,6 +124,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Por favor, ingresa tu correo.';
+                    }
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value.trim())) {
+                      return 'Por favor, ingresa un correo válido.';
                     }
                     return null;
                   },
