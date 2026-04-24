@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -42,14 +43,18 @@ class _LoginPageState extends State<LoginPage> {
       final String apiUrl = '${ApiConfig.baseUrl}/api/login';
       debugPrint('🌐 Conectando a: $apiUrl');
 
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text.trim(),
-        }),
-      );
+      final response = await http
+          .post(
+            Uri.parse(apiUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': _emailController.text.trim(),
+              'password': _passwordController.text.trim(),
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+          ); // Aumentado a 30 para conexiones lentas
 
       if (!mounted) return;
 
@@ -82,6 +87,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
+    } on TimeoutException catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No se recibió respuesta del servidor. Revisa si el backend está activo y la URL está correcta.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,15 +126,11 @@ class _LoginPageState extends State<LoginPage> {
         title: Text('shitzu App', style: GoogleFonts.lobster(fontSize: 32)),
         centerTitle: true,
       ),
-      body: Builder(
-        builder: (context) {
+      body: LayoutBuilder(
+        builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    MediaQuery.of(context).size.height -
-                    (Scaffold.of(context).appBarMaxHeight ?? 0),
-              ),
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),

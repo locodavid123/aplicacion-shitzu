@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shitzu/page/login_page.dart';
 
+/// HomePage actúa como un controlador de acceso que, basándose en el rol recibido,
+/// muestra la interfaz adecuada para el usuario (admin, root o cliente).
 class HomePage extends StatelessWidget {
   final String email;
   final String role;
@@ -9,45 +10,78 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Evaluamos el rol para decidir qué vista cargar.
+    // Esto evita la necesidad de hacer un segundo Navigator.push, mejorando el UX.
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return _AdminDashboard(email: email);
+      case 'root':
+        return _RootDashboard(email: email);
+      case 'cliente':
+      default:
+        return _ClienteDashboard(email: email);
+    }
+  }
+}
+
+/// Interfaz para el rol 'admin'
+class _AdminDashboard extends StatelessWidget {
+  final String email;
+  const _AdminDashboard({required this.email});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bienvenido'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Aquí deberías implementar la lógica de cerrar sesión:
-              // 1. Eliminar cualquier token de autenticación almacenado localmente.
-              // 2. Notificar a tu servicio de autenticación personalizado.
-              // 3. Navegar de vuelta a la pantalla de login.
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            },
-          ),
-        ],
+        title: const Text('Panel de Administrador'),
+        actions: [_logoutAction(context)],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('¡Bienvenido!', style: TextStyle(fontSize: 24)),
-            const SizedBox(height: 16),
-            Text(
-              email, // Mostrar el email real pasado desde el Login
-              style: TextStyle(
-                fontSize: 18,
-                color: Theme.of(context).textTheme.bodySmall?.color,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Categoría: $role',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
+      body: Center(child: Text('Sesión iniciada como Admin: $email')),
     );
   }
+}
+
+/// Interfaz para el rol 'cliente'
+class _ClienteDashboard extends StatelessWidget {
+  final String email;
+  const _ClienteDashboard({required this.email});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mi Cuenta - Cliente'),
+        actions: [_logoutAction(context)],
+      ),
+      body: Center(child: Text('Bienvenido Cliente: $email')),
+    );
+  }
+}
+
+/// Interfaz para el rol 'root'
+class _RootDashboard extends StatelessWidget {
+  final String email;
+  const _RootDashboard({required this.email});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Control Maestro (Root)'),
+        actions: [_logoutAction(context)],
+      ),
+      body: Center(child: Text('Acceso total para: $email')),
+    );
+  }
+}
+
+/// Acción común de cerrar sesión
+Widget _logoutAction(BuildContext context) {
+  return IconButton(
+    icon: const Icon(Icons.logout),
+    onPressed: () {
+      // Redirige al login. Nota: Asegúrate de tener definida la ruta '/login' en tu MaterialApp
+      Navigator.of(context).pushReplacementNamed('/login');
+    },
+  );
 }

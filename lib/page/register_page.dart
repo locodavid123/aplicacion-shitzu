@@ -118,188 +118,208 @@ class _RegisterPageState extends State<RegisterPage> {
         title: Text('Registro', style: GoogleFonts.lobster(fontSize: 32)),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const SizedBox(height: 40),
-                Image.asset('assets/images/logo.png', height: 150),
-                const SizedBox(height: 40),
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Nombre Completo',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Ingresa tu nombre'
-                      : null,
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Nombre de Usuario',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.account_circle),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Ingresa un usuario'
-                      : null,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _countryController,
-                        decoration: const InputDecoration(
-                          filled: true,
-                          labelText: 'País',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _cityController,
-                        decoration: const InputDecoration(
-                          filled: true,
-                          labelText: 'Ciudad',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Teléfono',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Ingresa tu teléfono'
-                      : null,
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _ageController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Edad',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.cake),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return 'Ingresa tu edad';
-                    final age = int.tryParse(value);
-                    if (age == null) return 'Ingresa un número válido';
-                    if (age < 18)
-                      return 'Debes ser mayor de 18 años para registrarte';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Correo Electrónico',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, ingresa un correo.';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value.trim())) {
-                      return 'Por favor, ingresa un correo válido.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Contraseña',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, ingresa una contraseña.';
-                    }
-                    if (value.trim().length < 6) {
-                      return 'La contraseña debe tener al menos 6 caracteres.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    filled: true,
-                    labelText: 'Confirmar Contraseña',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, confirma tu contraseña.';
-                    }
-                    if (value.trim() != _passwordController.text.trim()) {
-                      return 'Las contraseñas no coinciden.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  onPressed: _isLoading ? null : _register,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(height: 40),
+                        Image.asset('assets/images/logo.png', height: 150),
+                        const SizedBox(height: 40),
+                        TextFormField(
+                          controller: _fullNameController,
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Nombre Completo',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.person),
                           ),
-                        )
-                      : const Text('Registrarse'),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Ingresa tu nombre'
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _usernameController,
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Nombre de Usuario',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.account_circle),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Ingresa un usuario'
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _countryController,
+                                decoration: const InputDecoration(
+                                  filled: true,
+                                  labelText: 'País',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Requerido'
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _cityController,
+                                decoration: const InputDecoration(
+                                  filled: true,
+                                  labelText: 'Ciudad',
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Requerido'
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Teléfono',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.phone),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Ingresa tu teléfono'
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _ageController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Edad',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.cake),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Ingresa tu edad';
+                            }
+                            final age = int.tryParse(value);
+                            if (age == null) return 'Ingresa un número válido';
+                            if (age < 18) {
+                              return 'Debes ser mayor de 18 años para registrarte';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Correo Electrónico',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Por favor, ingresa un correo.';
+                            }
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(value.trim())) {
+                              return 'Por favor, ingresa un correo válido.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Contraseña',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.lock),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Por favor, ingresa una contraseña.';
+                            }
+                            if (value.trim().length < 6) {
+                              return 'La contraseña debe tener al menos 6 caracteres.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            filled: true,
+                            labelText: 'Confirmar Contraseña',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Por favor, confirma tu contraseña.';
+                            }
+                            if (value.trim() !=
+                                _passwordController.text.trim()) {
+                              return 'Las contraseñas no coinciden.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 40),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: _isLoading ? null : _register,
+                          child: _isLoading
+                              ? const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                )
+                              : const Text('Registrarse'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shitzu/page/auth_gate.dart';
+import 'package:shitzu/page/login_page.dart';
 
 // Esta es la ÚNICA función main que debe existir.
 void main() async {
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const AuthGate(),
+      routes: {'/login': (context) => const LoginPage()},
     );
   }
 }
